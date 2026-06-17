@@ -1,25 +1,25 @@
 package sga.model;
 
 /**
- * Représentation minimale d'un badge.
+ * Représente un accès (droits) lié à un Lieu.
  */
-public class Badge {
+public class Acces {
     private int id;
     private String code;
-    private Integer personneId; // référence vers PERSONNE.id_personne
+    private Integer lieuId; // référence vers LIEU.id
     private String statut; // ACTIF, INACTIF
 
-    public Badge() {}
+    public Acces() {}
 
-    public Badge(int id, String code) {
+    public Acces(int id, String code) {
         this.id = id;
         this.code = code;
     }
 
-    public Badge(int id, String code, Integer personneId, String statut) {
+    public Acces(int id, String code, Integer lieuId, String statut) {
         this.id = id;
         this.code = code;
-        this.personneId = personneId;
+        this.lieuId = lieuId;
         this.statut = statut;
     }
 
@@ -39,12 +39,12 @@ public class Badge {
         this.code = code;
     }
 
-    public Integer getPersonneId() {
-        return personneId;
+    public Integer getLieuId() {
+        return lieuId;
     }
 
-    public void setPersonneId(Integer personneId) {
-        this.personneId = personneId;
+    public void setLieuId(Integer lieuId) {
+        this.lieuId = lieuId;
     }
 
     public String getStatut() {
@@ -53,11 +53,6 @@ public class Badge {
 
     public void setStatut(String statut) {
         this.statut = statut;
-    }
-
-    @Override
-    public String toString() {
-        return code;
     }
 
     public static class Statut {

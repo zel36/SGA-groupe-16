@@ -1,5 +1,6 @@
 package sga.dao;
 
+import sga.model.Acces;
 import sga.model.Lieu;
 import sga.util.DBConnection;
 
@@ -7,22 +8,30 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LieuDAOImpl implements LieuDAO {
+/**
+ * DAO JDBC pour Acces. Chaque Acces appartient à un seul Lieu (id_lieu FK).
+ */
+public class AccesDAOImpl implements AccesDAO {
 
     @Override
-    public Lieu findById(int id) throws SQLException {
+    public Acces findById(int id) throws SQLException {
         Connection c = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             c = DBConnection.getConnection();
-            ps = c.prepareStatement("SELECT id, nom, statut FROM LIEU WHERE id = ?");
+            // LEFT JOIN permet de récupérer le lieu même si la contrainte est temporairement absente
+            ps = c.prepareStatement("SELECT a.id, a.code, a.id_lieu, a.statut, l.nom as lieu_nom FROM ACCES a LEFT JOIN LIEU l ON a.id_lieu = l.id WHERE a.id = ?");
             ps.setInt(1, id);
             rs = ps.executeQuery();
-            if (rs.next()) return new Lieu(rs.getInt("id"), rs.getString("nom"), rs.getString("statut"));
+            if (rs.next()) {
+                Acces a = new Acces(rs.getInt("id"), rs.getString("code"), (rs.getObject("id_lieu") == null) ? null : rs.getInt("id_lieu"), rs.getString("statut"));
+                return a;
+            }
             return null;
         } finally {
             if (rs != null) try { rs.close(); } catch (SQLException ignored) {}
@@ -32,16 +41,18 @@ public class LieuDAOImpl implements LieuDAO {
     }
 
     @Override
-    public List<Lieu> findAll() throws SQLException {
+    public List<Acces> findAll() throws SQLException {
         Connection c = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             c = DBConnection.getConnection();
-            ps = c.prepareStatement("SELECT id, nom, statut FROM LIEU");
+            ps = c.prepareStatement("SELECT a.id, a.code, a.id_lieu, a.statut, l.nom as lieu_nom FROM ACCES a LEFT JOIN LIEU l ON a.id_lieu = l.id");
             rs = ps.executeQuery();
-            List<Lieu> list = new ArrayList<>();
-            while (rs.next()) list.add(new Lieu(rs.getInt("id"), rs.getString("nom"), rs.getString("statut")));
+            List<Acces> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(new Acces(rs.getInt("id"), rs.getString("code"), (rs.getObject("id_lieu") == null) ? null : rs.getInt("id_lieu"), rs.getString("statut")));
+            }
             return list;
         } finally {
             if (rs != null) try { rs.close(); } catch (SQLException ignored) {}
@@ -51,19 +62,19 @@ public class LieuDAOImpl implements LieuDAO {
     }
 
     @Override
-    public void insert(Lieu l) throws SQLException {
+    public void insert(Acces a) throws SQLException {
         Connection c = null;
         PreparedStatement ps = null;
         ResultSet keys = null;
         try {
             c = DBConnection.getConnection();
-            String sql = "INSERT INTO LIEU (id, nom, statut) VALUES (LIEU_SEQ.NEXTVAL, ?, ?)";
+            String sql = "INSERT INTO ACCES (id, code, id_lieu, statut) VALUES (ACCES_SEQ.NEXTVAL, ?, ?, ?)";
             ps = c.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
-            ps.setString(1, l.getNom());
-            ps.setString(2, l.getStatut() == null ? Lieu.Statut.OUVERT : l.getStatut());
+            ps.setString(1, a.getCode());
+            if (a.getLieuId() != null) ps.setInt(2, a.getLieuId()); else ps.setNull(2, Types.INTEGER);
+            ps.setString(3, a.getStatut() == null ? Acces.Statut.ACTIF : a.getStatut());
             ps.executeUpdate();
-            // try to obtain generated key
-            try { keys = ps.getGeneratedKeys(); if (keys != null && keys.next()) l.setId(keys.getInt(1)); } catch (SQLException ignored) {}
+            try { keys = ps.getGeneratedKeys(); if (keys != null && keys.next()) a.setId(keys.getInt(1)); } catch (SQLException ignored) {}
             c.commit();
         } catch (SQLException ex) {
             if (c != null) c.rollback();
@@ -76,15 +87,16 @@ public class LieuDAOImpl implements LieuDAO {
     }
 
     @Override
-    public void update(Lieu l) throws SQLException {
+    public void update(Acces a) throws SQLException {
         Connection c = null;
         PreparedStatement ps = null;
         try {
             c = DBConnection.getConnection();
-            ps = c.prepareStatement("UPDATE LIEU SET nom = ?, statut = ? WHERE id = ?");
-            ps.setString(1, l.getNom());
-            ps.setString(2, l.getStatut() == null ? Lieu.Statut.OUVERT : l.getStatut());
-            ps.setInt(3, l.getId());
+            ps = c.prepareStatement("UPDATE ACCES SET code = ?, id_lieu = ?, statut = ? WHERE id = ?");
+            ps.setString(1, a.getCode());
+            if (a.getLieuId() != null) ps.setInt(2, a.getLieuId()); else ps.setNull(2, Types.INTEGER);
+            ps.setString(3, a.getStatut() == null ? Acces.Statut.ACTIF : a.getStatut());
+            ps.setInt(4, a.getId());
             ps.executeUpdate();
             c.commit();
         } catch (SQLException ex) {
@@ -102,9 +114,8 @@ public class LieuDAOImpl implements LieuDAO {
         PreparedStatement ps = null;
         try {
             c = DBConnection.getConnection();
-            // suppression logique: on marque le lieu comme FERME
-            ps = c.prepareStatement("UPDATE LIEU SET statut = ? WHERE id = ?");
-            ps.setString(1, Lieu.Statut.FERME);
+            ps = c.prepareStatement("UPDATE ACCES SET statut = ? WHERE id = ?");
+            ps.setString(1, Acces.Statut.INACTIF);
             ps.setInt(2, id);
             ps.executeUpdate();
             c.commit();
