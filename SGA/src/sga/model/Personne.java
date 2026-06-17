@@ -1,13 +1,17 @@
 package sga.model;
 
+import org.isge.sga.model.entity.Profil;
+
 /**
  * Représente une personne dans le système.
- * Version simple du socle commun — étendez si nécessaire.
+ * Contient désormais une association vers un {@link Profil} et un champ de statut métier.
  */
 public class Personne {
     private int id;
     private String nom;
     private String prenom;
+    private Profil profil; // association vers la table PROFIL (id_profil)
+    private String statut; // valeur métier: 'ACTIF' par défaut, 'INACTIF' quand supprimé
 
     public Personne() {}
 
@@ -15,6 +19,15 @@ public class Personne {
         this.id = id;
         this.nom = nom;
         this.prenom = prenom;
+        this.statut = "ACTIF";
+    }
+
+    public Personne(int id, String nom, String prenom, Profil profil, String statut) {
+        this.id = id;
+        this.nom = nom;
+        this.prenom = prenom;
+        this.profil = profil;
+        this.statut = statut;
     }
 
     public int getId() {
@@ -41,8 +54,25 @@ public class Personne {
         this.prenom = prenom;
     }
 
+    public Profil getProfil() {
+        return profil;
+    }
+
+    public void setProfil(Profil profil) {
+        this.profil = profil;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
+    }
+
     @Override
     public String toString() {
-        return nom + " " + prenom;
+        String p = (profil == null) ? "" : " (" + profil.toString() + ")";
+        return (nom == null ? "" : nom) + " " + (prenom == null ? "" : prenom) + p;
     }
 }

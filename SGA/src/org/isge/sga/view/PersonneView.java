@@ -199,4 +199,27 @@ public class PersonneView extends JFrame {
         return btnDesactiver;
     }
 
+    /**
+     * Retourne l'ID de la personne sélectionnée dans la JTable (colonne cachée 0).
+     * Si aucune ligne n'est sélectionnée ou si l'ID ne peut pas être déterminé,
+     * renvoie -1.
+     */
+    public int getSelectedPersonneId() {
+        int viewRow = tablePersonnes.getSelectedRow();
+        if (viewRow < 0) {
+            return -1;
+        }
+        int modelRow = tablePersonnes.convertRowIndexToModel(viewRow);
+        Object idObj = tableModel.getValueAt(modelRow, 0);
+        if (idObj == null) return -1;
+        if (idObj instanceof Number) {
+            return ((Number) idObj).intValue();
+        }
+        try {
+            return Integer.parseInt(idObj.toString());
+        } catch (NumberFormatException ex) {
+            return -1;
+        }
+    }
+
 }
