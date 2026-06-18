@@ -12,7 +12,7 @@ public class DBConnection {
 
     // Valeurs par défaut (modifiable selon votre environnement)
     private static final String DEFAULT_URL = "jdbc:oracle:thin:@localhost:1521:XE";
-    private static final String DEFAULT_USER = "sga";
+    private static final String DEFAULT_USER = "system";
     private static final String DEFAULT_PASSWORD = "sga";
 
     static {
